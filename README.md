@@ -177,9 +177,11 @@ Before sharing the URL with judges, verify:
 
 ## Hackathon submission
 
-Draft Devpost copy is in [SUBMISSION.md](SUBMISSION.md). The recording plan is
-in [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Replace every explicit placeholder only
-with verified URLs and observed provider/model data before submitting.
+The 94-second production walkthrough is available on
+[YouTube](https://youtu.be/_Ve8TgHQeHY). Final Devpost copy is in
+[SUBMISSION.md](SUBMISSION.md), and the recording script is in
+[DEMO_SCRIPT.md](DEMO_SCRIPT.md). All published technical links and
+provider/model details are backed by the verified public run.
 
 ## Scope deliberately deferred
 
