@@ -9,14 +9,12 @@ project owner.
 
 ### Backblaze B2
 
-- [ ] Create or sign in to a Backblaze account.
-- [ ] Enable B2 Cloud Storage.
-- [ ] Create a dedicated bucket for ProofStudio demo assets.
-- [ ] Record the exact bucket name.
-- [ ] Record the bucket region from its S3 endpoint.
-- [ ] Create a bucket-scoped Application Key.
-- [ ] Grant the key read and write access to the ProofStudio bucket.
-- [ ] Copy the `keyID` and `applicationKey` when the key is created.
+- [x] Create or sign in to a Backblaze account.
+- [x] Enable B2 Cloud Storage.
+- [x] Create a dedicated bucket for ProofStudio demo assets.
+- [x] Record the exact bucket name and region.
+- [x] Create a bucket-scoped Application Key with list, read, and write access.
+- [x] Validate a write, read, and delete round trip without exposing credentials.
 
 Recommended bucket configuration:
 
@@ -31,18 +29,21 @@ Official guide:
 
 ### Media provider
 
-- [ ] Create or sign in to a GMI Cloud account.
-- [ ] Create or select an organization.
-- [ ] Confirm that image-generation models and credits are available.
-- [ ] Open `Organization Settings -> API Keys`.
-- [ ] Create an API key with the `ie_model` scope.
-- [ ] Copy the API key when it is created.
+- [ ] Create or sign in to a Cloudflare account on the Free plan.
+- [ ] Open `AI -> Workers AI` and select `Use REST API`.
+- [ ] Create the prefilled Workers AI API token.
+- [ ] For a custom token, grant only account-level `Workers AI - Read` and
+  `Workers AI - Edit` permissions for the selected account.
+- [ ] Copy the Account ID and API token when shown.
+- [ ] Do not upgrade to Workers Paid for this MVP.
 
 Official guide:
-<https://docs.gmicloud.ai/api-reference/introduction>
+<https://developers.cloudflare.com/workers-ai/get-started/rest-api/>
 
-If GMI Cloud is unavailable, blocked, or unsuitable, stop before purchasing
-credits and select another Genblaze-supported image provider.
+Workers AI includes 10,000 Neurons per day at no charge on the Free plan. The
+selected model consumes 26.05 Neurons per output 512x512 tile. If account setup
+is unavailable or requests payment details, stop rather than bypassing account
+requirements.
 
 ### Local environment
 
@@ -59,7 +60,9 @@ B2_KEY_ID=
 B2_APP_KEY=
 B2_BUCKET=
 B2_REGION=
-GMI_API_KEY=
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_MODEL=@cf/black-forest-labs/flux-2-klein-4b
 ```
 
 ## 2. Live integration work
@@ -67,10 +70,10 @@ GMI_API_KEY=
 Complete after the required credentials are available.
 
 - [x] Install the pinned `genblaze-s3` package.
-- [x] Install the pinned `genblaze-gmicloud` package.
-- [ ] Validate B2 authentication and bucket access.
+- [x] Add a project-owned Genblaze adapter for Cloudflare Workers AI.
+- [x] Validate B2 authentication and bucket access.
 - [ ] Validate the provider API key and list available image models.
-- [ ] Select one supported image model with acceptable cost and latency.
+- [x] Select one supported image model with acceptable cost and latency.
 - [ ] Run one low-cost image generation request.
 - [ ] Persist the generated asset through `ObjectStorageSink`.
 - [ ] Persist the canonical provenance manifest to B2.
@@ -82,7 +85,7 @@ Complete after the required credentials are available.
 Technical gate:
 
 ```text
-GMI Cloud -> Genblaze -> Backblaze B2 -> manifest -> verification
+Cloudflare Workers AI -> Genblaze -> Backblaze B2 -> manifest -> verification
 ```
 
 Do not continue to optional features until this gate passes.
@@ -94,7 +97,7 @@ Do not continue to optional features until this gate passes.
 - [x] Configure one live request to generate two image variants from one structured brief.
 - [ ] Return honest run statuses while generation is in progress.
 - [ ] Save provider job identifiers before polling.
-- [ ] Avoid duplicate paid generation after polling or storage failures.
+- [ ] Avoid duplicate quota-backed generation after polling or storage failures.
 - [x] Preserve the current idempotency behavior.
 - [x] Store campaign metadata and run history in B2.
 - [x] Load previous runs after application restart.
@@ -147,7 +150,7 @@ Deferred until the core flow is stable:
 
 ## 7. Demo and documentation
 
-- [ ] Update the README with the actual provider and model.
+- [x] Update the README with the selected provider and model.
 - [x] Document the B2 object layout implemented by the live pipeline.
 - [x] Add an architecture diagram.
 - [ ] Save one successful pre-generated demo run.
@@ -163,8 +166,9 @@ Deferred until the core flow is stable:
 - [x] Git repository initialized.
 - [x] Python environment created with `uv`.
 - [x] `genblaze-core==0.3.8` installed and pinned.
-- [x] Optional integrations pinned to `genblaze-s3==0.3.6` and
-  `genblaze-gmicloud==0.3.5`.
+- [x] `genblaze-s3==0.3.6` pinned for B2 storage.
+- [x] Cloudflare adapter model pinned to
+  `@cf/black-forest-labs/flux-2-klein-4b`.
 - [x] Local Genblaze manifest smoke test passes.
 - [x] FastAPI API implemented.
 - [x] Responsive web interface implemented.
@@ -175,6 +179,6 @@ Deferred until the core flow is stable:
 - [x] SHA-256 tamper detection implemented.
 - [x] Browser flow checked without console errors.
 - [x] Lint passes.
-- [x] Eight automated tests pass after live-mode and manifest verification coverage.
+- [x] Eleven automated tests pass, including mocked Cloudflare image responses.
 - [x] GitHub Actions passes on the public repository.
 - [x] Public project artifacts contain no Cyrillic text.

@@ -1,4 +1,4 @@
-"""Validate live credentials without starting a paid generation request."""
+"""Validate live credentials without starting a generation request."""
 
 from __future__ import annotations
 
@@ -31,17 +31,19 @@ def main() -> None:
     print("Backblaze B2 authentication: OK")
 
     response = httpx.get(
-        "https://console.gmicloud.ai/api/v1/ie/requestqueue/apikey/models",
-        headers={"Authorization": f"Bearer {settings.gmi_api_key}"},
+        "https://api.cloudflare.com/client/v4/accounts/"
+        f"{settings.cloudflare_account_id}/ai/models/search",
+        params={"search": settings.cloudflare_model},
+        headers={"Authorization": f"Bearer {settings.cloudflare_api_token}"},
         timeout=15,
     )
     response.raise_for_status()
     payload = response.json()
-    model_ids = payload.get("model_ids", payload if isinstance(payload, list) else [])
-    if settings.gmi_model not in model_ids:
-        raise SystemExit("GMI_MODEL is not present in the models available to this API key.")
-    print(f"GMI Cloud authentication and model access: OK ({settings.gmi_model})")
-    print("No paid generation request was made.")
+    model_names = [item.get("name") for item in payload.get("result", [])]
+    if settings.cloudflare_model not in model_names:
+        raise SystemExit("CLOUDFLARE_MODEL is not available to this account.")
+    print(f"Cloudflare Workers AI authentication: OK ({settings.cloudflare_model})")
+    print("No generation request was made and no Neurons were consumed.")
 
 
 if __name__ == "__main__":

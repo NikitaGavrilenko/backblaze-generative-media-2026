@@ -1,4 +1,4 @@
-"""Run the paid end-to-end technical gate after explicit confirmation."""
+"""Run the end-to-end technical gate after explicit confirmation."""
 
 from __future__ import annotations
 
@@ -14,13 +14,13 @@ from app.schemas import CampaignBrief
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--confirm-paid-run",
+        "--confirm-generation",
         action="store_true",
-        help="Confirm that one provider request producing two image variants may incur cost.",
+        help="Confirm use of the Cloudflare Workers AI daily allocation.",
     )
     args = parser.parse_args()
-    if not args.confirm_paid_run:
-        raise SystemExit("Refusing paid generation without --confirm-paid-run.")
+    if not args.confirm_generation:
+        raise SystemExit("Refusing generation without --confirm-generation.")
 
     settings = Settings(demo_mode=False)
     pipeline = LivePipeline(RunRepository(Path("data/live-smoke")), settings)

@@ -16,7 +16,7 @@ Show the ProofStudio landing page and the Live Mode indicator.
 
 Show the campaign name, audience, message, tone, constraints, and aspect ratio.
 
-> The input is structured and validated before any paid generation begins. One
+> The input is structured and validated before any external generation begins. One
 > idempotency key represents this request, preventing accidental duplicate
 > generation from repeated submissions.
 
@@ -26,7 +26,7 @@ Submit the brief once.
 
 Wait for the two real image variants to appear.
 
-> Genblaze sends the request to **[REQUIRED: exact model]** through GMI Cloud.
+> Genblaze sends the request to FLUX.2 klein 4B through Cloudflare Workers AI.
 > Its storage sink transfers both outputs to Backblaze B2, replaces temporary
 > provider URLs with durable B2 URLs, calculates SHA-256 hashes, and writes the
 > canonical provenance manifest.

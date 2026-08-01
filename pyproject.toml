@@ -11,6 +11,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "fastapi>=0.116,<1",
     "genblaze-core==0.3.8",
+    "httpx>=0.28,<1",
     "pydantic-settings>=2.10,<3",
     "python-multipart>=0.0.20,<1",
     "uvicorn[standard]>=0.35,<1",
@@ -20,11 +21,7 @@ dependencies = [
 b2 = [
     "genblaze-s3==0.3.6",
 ]
-gmi = [
-    "genblaze-gmicloud==0.3.5",
-]
 dev = [
-    "httpx>=0.28,<1",
     "pytest>=8.4,<9",
     "pytest-cov>=6.2,<7",
     "ruff>=0.12,<1",
