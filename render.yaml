@@ -14,7 +14,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_BASE_URL
-        sync: false
+        value: https://proofstudio-h3ds.onrender.com
       - key: DATA_DIR
         value: /tmp/proofstudio-data
       - key: DEMO_MODE

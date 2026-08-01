@@ -218,7 +218,7 @@ class LivePipeline:
                         run = GenerationRun.model_validate_json(backend.get(entry.key))
                     except (OSError, ValueError):
                         continue
-                    self.repository.save(run)
+                    self.repository.save(self._with_public_storage_urls(run))
                 token = page.next_token
                 if token is None:
                     break
@@ -236,6 +236,20 @@ class LivePipeline:
             )
         finally:
             backend.close()
+
+    def _with_public_storage_urls(self, run: GenerationRun) -> GenerationRun:
+        """Replace stale deployment URLs with the current private-B2 proxy base."""
+        public_base = self.settings.storage_public_url_base.rstrip("/")
+        assets = [
+            asset.model_copy(update={"url": f"{public_base}/{asset.storage_key}"})
+            for asset in run.assets
+        ]
+        manifest_url = (
+            f"{public_base}/{run.manifest_storage_key}"
+            if run.manifest_storage_key
+            else run.manifest_url
+        )
+        return run.model_copy(update={"assets": assets, "manifest_url": manifest_url})
 
     def run(self, brief: CampaignBrief, idempotency_key: str | None) -> GenerationRun:
         if idempotency_key:
@@ -342,6 +356,7 @@ class LivePipeline:
             created_at=created_at,
             completed_at=datetime.now(UTC),
         )
+        run = self._with_public_storage_urls(run)
         self.repository.save(run)
         self._persist_run_history(run)
         return run
