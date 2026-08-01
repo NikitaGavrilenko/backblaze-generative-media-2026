@@ -12,8 +12,12 @@ VIDEO_DIR = ROOT / "submission-assets" / "video"
 FRAME_DIR = VIDEO_DIR / "frames"
 CAPTIONED_DIR = VIDEO_DIR / "captioned"
 SEGMENT_DIR = VIDEO_DIR / "segments"
+NARRATION_DIR = VIDEO_DIR / "narration"
 OUTPUT = VIDEO_DIR / "proofstudio-demo.mp4"
 SRT_OUTPUT = VIDEO_DIR / "proofstudio-demo-en.srt"
+VIDEO_ONLY = SEGMENT_DIR / "video-only.mp4"
+NARRATION_OUTPUT = NARRATION_DIR / "proofstudio-demo-narration.wav"
+NARRATION_SCRIPT = ROOT / "scripts" / "synthesize_narration.ps1"
 
 WIDTH = 1280
 HEIGHT = 720
@@ -191,6 +195,13 @@ def locate_ffmpeg() -> Path:
     return matches[-1]
 
 
+def locate_windows_powershell() -> Path:
+    executable = Path(r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe")
+    if not executable.exists():
+        raise FileNotFoundError("Windows PowerShell is required for SAPI narration.")
+    return executable
+
+
 def run(command: list[str]) -> None:
     subprocess.run(command, check=True)
 
@@ -198,6 +209,7 @@ def run(command: list[str]) -> None:
 def main() -> None:
     CAPTIONED_DIR.mkdir(parents=True, exist_ok=True)
     SEGMENT_DIR.mkdir(parents=True, exist_ok=True)
+    NARRATION_DIR.mkdir(parents=True, exist_ok=True)
 
     srt_blocks: list[str] = []
     elapsed = 0.0
@@ -276,10 +288,90 @@ def main() -> None:
             "copy",
             "-movflags",
             "+faststart",
+            str(VIDEO_ONLY),
+        ]
+    )
+
+    powershell = locate_windows_powershell()
+    narration_segments: list[Path] = []
+    for scene in SCENES:
+        raw_narration = NARRATION_DIR / f"{scene['name']}-raw.wav"
+        timed_narration = NARRATION_DIR / f"{scene['name']}.wav"
+        run(
+            [
+                str(powershell),
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(NARRATION_SCRIPT),
+                "-Text",
+                scene["caption"],
+                "-OutputPath",
+                str(raw_narration),
+            ]
+        )
+        duration = scene["duration"]
+        run(
+            [
+                str(ffmpeg),
+                "-y",
+                "-i",
+                str(raw_narration),
+                "-af",
+                f"apad=pad_dur={duration},atrim=0:{duration},afade=t=in:st=0:d=0.18,afade=t=out:st={duration - 0.3}:d=0.3",
+                "-ar",
+                "48000",
+                "-ac",
+                "2",
+                "-c:a",
+                "pcm_s16le",
+                str(timed_narration),
+            ]
+        )
+        narration_segments.append(timed_narration)
+
+    narration_concat = NARRATION_DIR / "concat.txt"
+    narration_concat.write_text(
+        "".join(f"file '{path.as_posix()}'\n" for path in narration_segments),
+        encoding="utf-8",
+    )
+    run(
+        [
+            str(ffmpeg),
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(narration_concat),
+            "-c:a",
+            "pcm_s16le",
+            str(NARRATION_OUTPUT),
+        ]
+    )
+    run(
+        [
+            str(ffmpeg),
+            "-y",
+            "-i",
+            str(VIDEO_ONLY),
+            "-i",
+            str(NARRATION_OUTPUT),
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "160k",
+            "-shortest",
+            "-movflags",
+            "+faststart",
             str(OUTPUT),
         ]
     )
-    print(f"Created {OUTPUT} ({elapsed:.0f} seconds)")
+    print(f"Created narrated {OUTPUT} ({elapsed:.0f} seconds)")
 
 
 if __name__ == "__main__":

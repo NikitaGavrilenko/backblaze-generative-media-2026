@@ -22,3 +22,4 @@ Thumbs.db
 # Locally rendered video intermediates
 submission-assets/video/captioned/
 submission-assets/video/segments/
+submission-assets/video/narration/
