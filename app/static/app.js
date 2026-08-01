@@ -88,8 +88,23 @@ async function loadHealth() {
   if (!response.ok) throw new Error("Could not load application status.");
   const health = await response.json();
   const indicator = document.querySelector("#mode-indicator");
+  const modeNote = document.querySelector("#mode-note");
+  const historyNote = document.querySelector("#history-note");
+  const storageIndicator = document.querySelector("#storage-indicator");
+  const liveReady = health.mode === "live" && health.live_configured;
   indicator.querySelector("strong").textContent = `${health.mode} mode`;
-  indicator.classList.toggle("mode-live", health.mode === "live" && health.live_configured);
+  indicator.classList.toggle("mode-live", liveReady);
+  if (liveReady) {
+    modeNote.textContent =
+      "Live mode generates two images with Cloudflare Workers AI and stores them in private Backblaze B2.";
+    historyNote.textContent = "Run metadata, assets, and manifests are restored from Backblaze B2.";
+    storageIndicator.textContent = "Backblaze B2 durable storage active";
+  } else {
+    modeNote.textContent =
+      "Demo mode creates local fixtures and a real Genblaze manifest. No external AI call is made.";
+    historyNote.textContent = "Demo runs are stored in the local development repository.";
+    storageIndicator.textContent = "Local demo storage active";
+  }
   if (health.mode === "live" && !health.live_configured) {
     setError(`Live mode is missing: ${health.missing_settings.join(", ")}`);
   }
