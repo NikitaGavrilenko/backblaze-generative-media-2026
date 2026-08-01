@@ -13,7 +13,7 @@
       <span class="brand-mark">P</span>
       <span>ProofStudio</span>
     </a>
-    <div class="mode"><span></span> Demo mode</div>
+    <div id="mode-indicator" class="mode"><span></span><strong>Checking mode…</strong></div>
   </header>
 
   <main>
@@ -105,6 +105,12 @@
               <a id="manifest-link" class="secondary-button" target="_blank" rel="noreferrer">Open manifest</a>
             </div>
           </div>
+          <dl class="run-details">
+            <div><dt>Model</dt><dd id="run-model"></dd></div>
+            <div><dt>Prompt</dt><dd id="run-prompt"></dd></div>
+            <div><dt>Parameters</dt><dd><code id="run-parameters"></code></dd></div>
+            <div><dt>Provider job</dt><dd><code id="run-provider-job"></code></dd></div>
+          </dl>
         </div>
 
         <div id="error-state" class="error-state" hidden></div>
@@ -131,4 +137,3 @@
   <script src="/static/app.js" defer></script>
 </body>
 </html>
-

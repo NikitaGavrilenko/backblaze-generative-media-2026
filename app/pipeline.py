@@ -5,10 +5,22 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from html import escape
+from typing import Protocol
 from uuid import uuid4
 
-from genblaze_core import Manifest, Modality, RunBuilder, StepBuilder, StepStatus
+from genblaze_core import (
+    KeyStrategy,
+    Manifest,
+    Modality,
+    ObjectStorageSink,
+    Pipeline,
+    RunBuilder,
+    StepBuilder,
+    StepStatus,
+)
+from genblaze_core.providers import RetryPolicy
 
+from app.config import Settings
 from app.repository import RunRepository
 from app.schemas import (
     CampaignBrief,
@@ -22,12 +34,26 @@ DEMO_PROVIDER = "proofstudio-demo"
 DEMO_MODEL = "deterministic-svg-1"
 
 
+class GenerationPipeline(Protocol):
+    def run(self, brief: CampaignBrief, idempotency_key: str | None) -> GenerationRun: ...
+
+    def verify(self, run: GenerationRun) -> VerificationResult: ...
+
+
 class DemoPipeline:
     """Produces transparent local fixtures while exercising Genblaze provenance."""
 
     def __init__(self, repository: RunRepository, public_data_prefix: str = "/data") -> None:
         self.repository = repository
         self.public_data_prefix = public_data_prefix.rstrip("/")
+
+    @staticmethod
+    def _build_prompt(brief: CampaignBrief) -> str:
+        return LivePipeline._build_prompt(brief)
+
+    @staticmethod
+    def _render_svg(brief: CampaignBrief, variant: int) -> str:
+        return LivePipeline._render_svg(brief, variant)
 
     def run(self, brief: CampaignBrief, idempotency_key: str | None) -> GenerationRun:
         if idempotency_key:
@@ -96,6 +122,13 @@ class DemoPipeline:
             verified=verified,
             demo_mode=True,
             assets=assets,
+            parameters={
+                "aspect_ratio": brief.aspect_ratio,
+                "demo_mode": True,
+                "seed": 42,
+                "variants": 2,
+            },
+            manifest_storage_key=f"runs/{run_id}/manifest.json",
             idempotency_key=idempotency_key,
             created_at=created_at,
             completed_at=completed_at,
@@ -105,6 +138,17 @@ class DemoPipeline:
 
     def verify(self, run: GenerationRun) -> VerificationResult:
         errors: list[str] = []
+        manifest_path = self.repository.runs_dir / run.id / "manifest.json"
+        if not manifest_path.is_file():
+            errors.append("Manifest is missing.")
+        else:
+            try:
+                manifest = Manifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+                if not manifest.verify() or manifest.canonical_hash != run.manifest_hash:
+                    errors.append("Manifest failed canonical hash verification.")
+            except (OSError, ValueError):
+                errors.append("Manifest is invalid.")
+
         for asset in run.assets:
             asset_path = (self.repository.data_dir / asset.storage_key).resolve()
             if not asset_path.is_relative_to(self.repository.data_dir):
@@ -120,6 +164,198 @@ class DemoPipeline:
         return VerificationResult(
             run_id=run.id,
             verified=not errors and run.verified,
+            checked_assets=len(run.assets),
+            errors=errors,
+        )
+
+
+class LivePipeline:
+    """Runs one paid GMI Cloud image request and persists its outputs to B2."""
+
+    def __init__(self, repository: RunRepository, settings: Settings) -> None:
+        self.repository = repository
+        self.settings = settings
+        self._history_synced = False
+
+    def _open_backend(self):
+        from genblaze_s3 import S3StorageBackend
+
+        return S3StorageBackend.for_backblaze(
+            self.settings.b2_bucket,
+            region=self.settings.b2_region,
+            key_id=self.settings.b2_key_id,
+            app_key=self.settings.b2_app_key,
+            public_url_base=self.settings.b2_public_url_base,
+            auto_lifecycle=False,
+            preflight=True,
+        )
+
+    def sync_repository(self) -> None:
+        """Hydrate local run history from B2 once per application process."""
+        if self._history_synced or self.settings.live_configuration_errors():
+            return
+        backend = self._open_backend()
+        token: str | None = None
+        try:
+            while True:
+                page = backend.list(
+                    prefix="proofstudio/app-runs/",
+                    continuation_token=token,
+                )
+                for entry in page.entries:
+                    try:
+                        run = GenerationRun.model_validate_json(backend.get(entry.key))
+                    except (OSError, ValueError):
+                        continue
+                    self.repository.save(run)
+                token = page.next_token
+                if token is None:
+                    break
+            self._history_synced = True
+        finally:
+            backend.close()
+
+    def _persist_run_history(self, run: GenerationRun) -> None:
+        backend = self._open_backend()
+        try:
+            backend.put(
+                f"proofstudio/app-runs/{run.id}.json",
+                run.model_dump_json(indent=2).encode("utf-8"),
+                content_type="application/json",
+            )
+        finally:
+            backend.close()
+
+    def run(self, brief: CampaignBrief, idempotency_key: str | None) -> GenerationRun:
+        if idempotency_key:
+            existing = self.repository.find_by_idempotency_key(idempotency_key)
+            if existing:
+                return existing
+
+        missing = self.settings.live_configuration_errors()
+        if missing:
+            raise RuntimeError(f"Live mode is missing settings: {', '.join(missing)}")
+
+        from genblaze_gmicloud import GMICloudImageProvider
+
+        created_at = datetime.now(UTC)
+        prompt = DemoPipeline._build_prompt(brief)
+        model = self.settings.gmi_model or ""
+        provider = GMICloudImageProvider(
+            api_key=self.settings.gmi_api_key,
+            retry_policy=RetryPolicy.conservative(),
+        )
+        backend = self._open_backend()
+        sink = ObjectStorageSink(
+            backend,
+            prefix="proofstudio",
+            key_strategy=KeyStrategy.CONTENT_ADDRESSABLE,
+        )
+        try:
+            result = (
+                Pipeline("proofstudio-live", project_id="proofstudio", preflight=True)
+                .step(
+                    provider,
+                    model=model,
+                    prompt=prompt,
+                    modality=Modality.IMAGE,
+                    aspect_ratio=brief.aspect_ratio,
+                    number_of_images=2,
+                )
+                .run(
+                    sink=sink,
+                    fail_fast=True,
+                    timeout=self.settings.generation_timeout_seconds,
+                    max_retries=1,
+                )
+            )
+        finally:
+            provider.close()
+
+        assets = [asset for step in result.run.steps for asset in step.assets]
+        if len(assets) < 2:
+            raise RuntimeError("The provider completed without two stored image variants.")
+
+        media_assets = [
+            MediaAsset(
+                id=asset.asset_id,
+                variant=index,
+                url=asset.url,
+                storage_key=backend.key_from_url(asset.url) or asset.url,
+                mime_type=asset.media_type,
+                sha256=asset.sha256 or "",
+            )
+            for index, asset in enumerate(assets[:2], start=1)
+        ]
+        provider_job_ids = [
+            str(request_id)
+            for step in result.run.steps
+            for request_id in [
+                (step.provider_payload or {}).get("gmicloud", {}).get("request_id")
+            ]
+            if request_id
+        ]
+        manifest_key = sink.manifest_key_for(result.run)
+        run = GenerationRun(
+            id=result.run.run_id,
+            campaign=brief,
+            status=RunStatus.COMPLETED,
+            provider=provider.name,
+            model=model,
+            prompt=prompt,
+            manifest_url=sink.manifest_url_for(result.run),
+            manifest_hash=result.manifest.canonical_hash,
+            verified=result.manifest.verify(),
+            demo_mode=False,
+            assets=media_assets,
+            parameters={
+                "aspect_ratio": brief.aspect_ratio,
+                "number_of_images": 2,
+            },
+            provider_job_ids=provider_job_ids,
+            manifest_storage_key=manifest_key,
+            idempotency_key=idempotency_key,
+            created_at=created_at,
+            completed_at=datetime.now(UTC),
+        )
+        self.repository.save(run)
+        self._persist_run_history(run)
+        return run
+
+    def verify(self, run: GenerationRun) -> VerificationResult:
+        errors: list[str] = []
+        missing = self.settings.live_configuration_errors()
+        if missing:
+            return VerificationResult(
+                run_id=run.id,
+                verified=False,
+                checked_assets=0,
+                errors=[f"Live verification is missing settings: {', '.join(missing)}"],
+            )
+
+        backend = self._open_backend()
+        try:
+            if not run.manifest_storage_key:
+                errors.append("Manifest storage key is missing.")
+            else:
+                manifest = Manifest.model_validate_json(
+                    backend.get(run.manifest_storage_key).decode("utf-8")
+                )
+                if not manifest.verify() or manifest.canonical_hash != run.manifest_hash:
+                    errors.append("Stored manifest failed canonical hash verification.")
+
+            for asset in run.assets:
+                data = backend.get(asset.storage_key)
+                if hashlib.sha256(data).hexdigest() != asset.sha256:
+                    errors.append(f"Asset {asset.id} failed SHA-256 verification.")
+        except Exception:
+            errors.append("B2 verification failed. Check server logs and storage configuration.")
+        finally:
+            backend.close()
+
+        return VerificationResult(
+            run_id=run.id,
+            verified=not errors,
             checked_assets=len(run.assets),
             errors=errors,
         )

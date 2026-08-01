@@ -16,6 +16,27 @@ def test_health(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     assert response.json()["genblaze"] == "0.3.8"
+    assert response.json()["mode"] == "demo"
+
+
+def test_live_mode_reports_missing_configuration(tmp_path: Path) -> None:
+    app = create_app(Settings(data_dir=tmp_path, demo_mode=False))
+    client = TestClient(app)
+
+    health = client.get("/api/health")
+    created = client.post(
+        "/api/runs",
+        json={
+            "name": "Live launch",
+            "audience": "Creative teams",
+            "message": "Generate a traceable campaign.",
+            "tone": "Editorial",
+        },
+    )
+
+    assert health.json()["status"] == "degraded"
+    assert "GMI_API_KEY" in health.json()["missing_settings"]
+    assert created.status_code == 503
 
 
 def test_create_and_verify_run(tmp_path: Path) -> None:

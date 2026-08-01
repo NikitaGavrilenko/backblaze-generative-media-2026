@@ -52,6 +52,9 @@ class GenerationRun(BaseModel):
     verified: bool
     demo_mode: bool
     assets: list[MediaAsset]
+    parameters: dict[str, object] = Field(default_factory=dict)
+    provider_job_ids: list[str] = Field(default_factory=list)
+    manifest_storage_key: str | None = None
     idempotency_key: str | None = None
     created_at: datetime
     completed_at: datetime | None = None
@@ -70,4 +73,5 @@ class HealthResponse(BaseModel):
     mode: str
     genblaze: str
     storage: str
-
+    live_configured: bool
+    missing_settings: list[str] = Field(default_factory=list)

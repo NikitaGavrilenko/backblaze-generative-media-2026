@@ -14,6 +14,13 @@ function setError(message = "") {
   errorState.textContent = message;
 }
 
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
 function renderRun(run) {
   activeRun = run;
   emptyState.hidden = true;
@@ -21,32 +28,50 @@ function renderRun(run) {
   setError();
   document.querySelector("#run-status").textContent = run.status;
   document.querySelector("#run-provider").textContent = run.provider;
+  document.querySelector("#run-model").textContent = run.model;
+  document.querySelector("#run-prompt").textContent = run.prompt;
+  document.querySelector("#run-parameters").textContent = JSON.stringify(run.parameters);
+  document.querySelector("#run-provider-job").textContent = run.provider_job_ids.join(", ") || "Not applicable";
   document.querySelector("#run-verified").textContent = run.verified ? "Verified" : "Unverified";
   document.querySelector("#manifest-hash").textContent = run.manifest_hash;
   document.querySelector("#manifest-link").href = `/api/runs/${run.id}/manifest`;
-  document.querySelector("#asset-grid").innerHTML = run.assets.map((asset) => `
-    <article class="asset-card">
-      <img src="${asset.url}" alt="Campaign variant ${asset.variant}">
-      <div class="asset-meta">
-        <span>Variant ${asset.variant}</span>
-        <span>SHA ${asset.sha256.slice(0, 10)}…</span>
-      </div>
-    </article>
-  `).join("");
+  const assetGrid = document.querySelector("#asset-grid");
+  assetGrid.replaceChildren();
+  run.assets.forEach((asset) => {
+    const card = element("article", "asset-card");
+    const image = element("img");
+    image.src = asset.url;
+    image.alt = `Campaign variant ${asset.variant}`;
+    const meta = element("div", "asset-meta");
+    meta.append(
+      element("span", "", `Variant ${asset.variant}`),
+      element("span", "", `SHA ${asset.sha256.slice(0, 10)}…`),
+    );
+    card.append(image, meta);
+    assetGrid.append(card);
+  });
 }
 
 function renderHistory(runs) {
   if (!runs.length) {
-    historyGrid.innerHTML = '<p class="form-note">No saved runs yet.</p>';
+    historyGrid.replaceChildren(element("p", "form-note", "No saved runs yet."));
     return;
   }
-  historyGrid.innerHTML = runs.map((run) => `
-    <article class="history-card" data-run-id="${run.id}">
-      <p>${new Date(run.created_at).toLocaleString()}</p>
-      <h3>${run.campaign.name}</h3>
-      <p>${run.assets.length} assets · ${run.verified ? "verified" : "unverified"} · ${run.demo_mode ? "demo" : "live"}</p>
-    </article>
-  `).join("");
+  historyGrid.replaceChildren();
+  runs.forEach((run) => {
+    const card = element("article", "history-card");
+    card.dataset.runId = run.id;
+    card.append(
+      element("p", "", new Date(run.created_at).toLocaleString()),
+      element("h3", "", run.campaign.name),
+      element(
+        "p",
+        "",
+        `${run.assets.length} assets · ${run.verified ? "verified" : "unverified"} · ${run.demo_mode ? "demo" : "live"}`,
+      ),
+    );
+    historyGrid.append(card);
+  });
   historyGrid.querySelectorAll("[data-run-id]").forEach((card) => {
     card.addEventListener("click", () => loadRun(card.dataset.runId));
   });
@@ -56,6 +81,18 @@ async function loadHistory() {
   const response = await fetch("/api/runs");
   if (!response.ok) throw new Error("Could not load run history.");
   renderHistory(await response.json());
+}
+
+async function loadHealth() {
+  const response = await fetch("/api/health");
+  if (!response.ok) throw new Error("Could not load application status.");
+  const health = await response.json();
+  const indicator = document.querySelector("#mode-indicator");
+  indicator.querySelector("strong").textContent = `${health.mode} mode`;
+  indicator.classList.toggle("mode-live", health.mode === "live" && health.live_configured);
+  if (health.mode === "live" && !health.live_configured) {
+    setError(`Live mode is missing: ${health.missing_settings.join(", ")}`);
+  }
 }
 
 async function loadRun(runId) {
@@ -120,5 +157,4 @@ verifyButton.addEventListener("click", async () => {
   setError(result.errors.join(" "));
 });
 
-loadHistory().catch((error) => setError(error.message));
-
+Promise.all([loadHealth(), loadHistory()]).catch((error) => setError(error.message));

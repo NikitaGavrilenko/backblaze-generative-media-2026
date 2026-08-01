@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Response, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import Settings, get_settings
-from app.pipeline import DemoPipeline
+from app.pipeline import DemoPipeline, LivePipeline
 from app.repository import RunRepository
 from app.schemas import (
     CampaignBrief,
@@ -30,7 +31,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     data_dir.mkdir(parents=True, exist_ok=True)
 
     repository = RunRepository(data_dir)
-    pipeline = DemoPipeline(repository)
+    demo_pipeline = DemoPipeline(repository)
+    live_pipeline = LivePipeline(repository, active_settings)
+    pipeline = demo_pipeline if active_settings.demo_mode else live_pipeline
 
     application = FastAPI(
         title="ProofStudio",
@@ -50,11 +53,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @application.get("/api/health", response_model=HealthResponse)
     def health() -> HealthResponse:
+        missing_settings = active_settings.live_configuration_errors()
         return HealthResponse(
-            status="ok",
+            status="ok" if active_settings.demo_mode or not missing_settings else "degraded",
             mode="demo" if active_settings.demo_mode else "live",
             genblaze="0.3.8",
-            storage="local",
+            storage="local" if active_settings.demo_mode else "backblaze-b2",
+            live_configured=not missing_settings,
+            missing_settings=missing_settings,
         )
 
     @application.post(
@@ -66,21 +72,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         brief: CampaignBrief,
         idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     ) -> GenerationRun:
-        if not active_settings.demo_mode:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Live pipeline is not configured yet.",
-            )
         normalized_key = idempotency_key.strip() if idempotency_key else None
         if normalized_key and len(normalized_key) > 128:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Idempotency-Key must be at most 128 characters.",
             )
-        return pipeline.run(brief, normalized_key)
+        try:
+            return pipeline.run(brief, normalized_key)
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(exc),
+            ) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Generation or durable storage failed. Check server logs.",
+            ) from exc
 
     @application.get("/api/runs", response_model=list[GenerationRun])
     def list_runs() -> list[GenerationRun]:
+        if not active_settings.demo_mode:
+            with suppress(Exception):
+                live_pipeline.sync_repository()
         return repository.list()
 
     @application.get("/api/runs/{run_id}", response_model=GenerationRun)
@@ -95,6 +110,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         run = repository.get(run_id)
         if not run:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found.")
+        if not run.demo_mode:
+            return RedirectResponse(
+                run.manifest_url,
+                status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+            )
         manifest_path = repository.runs_dir / run_id / "manifest.json"
         if not manifest_path.is_file():
             raise HTTPException(
@@ -111,10 +131,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         run = repository.get(run_id)
         if not run:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found.")
-        return pipeline.verify(run)
+        verifier = demo_pipeline if run.demo_mode else live_pipeline
+        return verifier.verify(run)
 
     return application
 
 
 app = create_app()
-
