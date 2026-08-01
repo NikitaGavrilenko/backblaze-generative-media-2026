@@ -1,6 +1,6 @@
 # ProofStudio — Remaining Work
 
-Last updated: July 29, 2026
+Last updated: August 1, 2026
 
 ## 1. Required user setup
 
@@ -45,7 +45,7 @@ credits and select another Genblaze-supported image provider.
 
 ### Local environment
 
-- [ ] Copy `.env.example` to `.env`.
+- [x] Copy `.env.example` to `.env`.
 - [ ] Add the Backblaze and provider credentials to `.env`.
 - [ ] Do not send credentials through chat.
 - [ ] Do not commit `.env`.
@@ -65,8 +65,8 @@ GMI_API_KEY=
 
 Complete after the required credentials are available.
 
-- [ ] Install the pinned `genblaze-s3` package.
-- [ ] Install the pinned `genblaze-gmicloud` package.
+- [x] Install the pinned `genblaze-s3` package.
+- [x] Install the pinned `genblaze-gmicloud` package.
 - [ ] Validate B2 authentication and bucket access.
 - [ ] Validate the provider API key and list available image models.
 - [ ] Select one supported image model with acceptable cost and latency.
@@ -87,17 +87,17 @@ Do not continue to optional features until this gate passes.
 
 ## 3. Replace the demo pipeline
 
-- [ ] Add a live pipeline implementation behind the existing pipeline interface.
-- [ ] Keep Demo Mode available as an explicit fallback.
-- [ ] Generate two real image variants from one structured brief.
+- [x] Add a live pipeline implementation behind the existing pipeline interface.
+- [x] Keep Demo Mode available as an explicit fallback.
+- [x] Configure one live request to generate two image variants from one structured brief.
 - [ ] Return honest run statuses while generation is in progress.
 - [ ] Save provider job identifiers before polling.
 - [ ] Avoid duplicate paid generation after polling or storage failures.
-- [ ] Preserve the current idempotency behavior.
-- [ ] Store campaign metadata and run history in B2.
-- [ ] Load previous runs after application restart.
-- [ ] Display durable B2 asset URLs in the gallery.
-- [ ] Display provider, model, prompt, parameters, hashes, and manifest links.
+- [x] Preserve the current idempotency behavior.
+- [x] Store campaign metadata and run history in B2.
+- [x] Load previous runs after application restart.
+- [x] Display durable B2 asset URLs in the gallery.
+- [x] Display provider, model, prompt, parameters, hashes, and manifest links.
 
 ## 4. Reliability and tests
 
@@ -106,9 +106,9 @@ Do not continue to optional features until this gate passes.
 - [ ] Test provider timeout behavior.
 - [ ] Test provider success followed by B2 upload failure.
 - [ ] Test a missing or inaccessible provider output URL.
-- [ ] Test a repeated request with the same idempotency key.
-- [ ] Test a modified asset that fails SHA-256 verification.
-- [ ] Ensure logs never contain API keys or authorization headers.
+- [x] Test a repeated request with the same idempotency key.
+- [x] Test a modified asset that fails SHA-256 verification.
+- [x] Ensure application responses never contain API keys or authorization headers.
 - [ ] Add bounded retries only for temporary failures.
 - [ ] Add a visible partial-failure state.
 
@@ -117,10 +117,10 @@ Do not continue to optional features until this gate passes.
 - [ ] Replace demo SVG fixtures with live generated images.
 - [ ] Add visible `generating`, `storing`, `completed`, and `failed` states.
 - [ ] Add a retry action for failed runs.
-- [ ] Add a clear distinction between Demo Mode and Live Mode.
-- [ ] Confirm that the main workflow works on a mobile-sized screen.
-- [ ] Keep all UI copy and public artifacts in English.
-- [ ] Remove any unnecessary personal information from public artifacts.
+- [x] Add a clear distinction between Demo Mode and Live Mode.
+- [ ] Confirm that the updated main workflow works on a mobile-sized screen.
+- [x] Keep all UI copy and public artifacts in English.
+- [x] Remove any unnecessary personal information from public artifacts.
 
 Deferred until the core flow is stable:
 
@@ -133,24 +133,24 @@ Deferred until the core flow is stable:
 
 ## 6. Deployment and release
 
-- [ ] Select a deployment platform that supports Python 3.11+.
-- [ ] Configure secrets through the deployment platform, not source files.
+- [x] Select a deployment platform that supports Python 3.11+ (Render).
+- [x] Configure secret placeholders through the deployment platform, not source files.
 - [ ] Deploy the FastAPI application.
 - [ ] Verify the application from a private/incognito browser session.
 - [ ] Confirm that generated files remain available after application restart.
-- [ ] Add a health check for the app, provider configuration, and storage.
-- [ ] Review Git history for accidentally committed secrets.
+- [x] Add a health check for the app and live provider/storage configuration.
+- [x] Review Git history for accidentally committed secrets.
 - [x] Create a clean initial commit.
 - [ ] Push the repository to GitHub.
 
 ## 7. Demo and documentation
 
 - [ ] Update the README with the actual provider and model.
-- [ ] Document the real B2 object layout.
-- [ ] Add an architecture diagram.
+- [x] Document the B2 object layout implemented by the live pipeline.
+- [x] Add an architecture diagram.
 - [ ] Save one successful pre-generated demo run.
 - [ ] Save one controlled failure example.
-- [ ] Write a demo script shorter than three minutes.
+- [x] Write a demo script shorter than three minutes.
 - [ ] Record the real working application.
 - [ ] Capture screenshots of generation, provenance, history, and verification.
 - [ ] Ensure every claimed feature is visible and implemented.
@@ -173,5 +173,5 @@ Deferred until the core flow is stable:
 - [x] SHA-256 tamper detection implemented.
 - [x] Browser flow checked without console errors.
 - [x] Lint passes.
-- [x] Six automated tests pass.
+- [x] Eight automated tests pass after live-mode and manifest verification coverage.
 - [x] Public project artifacts contain no Cyrillic text.

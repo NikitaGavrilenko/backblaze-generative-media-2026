@@ -51,3 +51,15 @@ def test_verification_detects_modified_asset(tmp_path: Path) -> None:
     assert result.verified is False
     assert "failed SHA-256 verification" in result.errors[0]
 
+
+def test_verification_detects_modified_manifest(tmp_path: Path) -> None:
+    repository = RunRepository(tmp_path)
+    pipeline = DemoPipeline(repository)
+    run = pipeline.run(sample_brief(), None)
+    manifest_path = tmp_path / "runs" / run.id / "manifest.json"
+    manifest_path.write_text('{"tampered": true}', encoding="utf-8")
+
+    result = pipeline.verify(run)
+
+    assert result.verified is False
+    assert "Manifest is invalid" in result.errors[0]
