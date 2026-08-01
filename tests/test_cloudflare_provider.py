@@ -1,5 +1,7 @@
 import base64
 from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 import httpx
 import pytest
@@ -9,6 +11,10 @@ from genblaze_core.exceptions import ProviderError
 from app.providers.cloudflare import CLOUDFLARE_IMAGE_MODEL, CloudflareImageProvider
 
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"test-image"
+
+
+def path_from_file_url(url: str) -> Path:
+    return Path(url2pathname(urlparse(url).path))
 
 
 def build_step(*, count: int = 2, aspect_ratio: str = "4:5"):
@@ -46,7 +52,7 @@ def test_cloudflare_provider_returns_local_assets_without_live_request() -> None
         assert len(requests) == 2
         assert len(result.assets) == 2
         assert all(asset.media_type == "image/png" for asset in result.assets)
-        assert all(Path(asset.url.removeprefix("file:///")).is_file() for asset in result.assets)
+        assert all(path_from_file_url(asset.url).is_file() for asset in result.assets)
         assert result.provider_payload["cloudflare"]["request_ids"] == ["test-ray", "test-ray"]
         assert all(
             request.headers["authorization"] == "Bearer secret-token" for request in requests
