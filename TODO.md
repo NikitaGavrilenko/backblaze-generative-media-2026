@@ -141,7 +141,7 @@ Deferred until the core flow is stable:
 - [x] Add a health check for the app and live provider/storage configuration.
 - [x] Review Git history for accidentally committed secrets.
 - [x] Create a clean initial commit.
-- [ ] Push the repository to GitHub.
+- [x] Push the repository to GitHub.
 
 ## 7. Demo and documentation
 
@@ -174,4 +174,5 @@ Deferred until the core flow is stable:
 - [x] Browser flow checked without console errors.
 - [x] Lint passes.
 - [x] Eight automated tests pass after live-mode and manifest verification coverage.
+- [x] GitHub Actions passes on the public repository.
 - [x] Public project artifacts contain no Cyrillic text.

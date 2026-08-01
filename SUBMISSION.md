@@ -16,7 +16,7 @@ Turn campaign briefs into durable, verifiable generative media runs.
 ## Links
 
 - Working application: **[REQUIRED: public deployment URL]**
-- Source repository: **[REQUIRED: GitHub repository URL]**
+- Source repository: <https://github.com/NikitaGavrilenko/backblaze-generative-media-2026>
 - Demo video: **[REQUIRED: public video URL, approximately three minutes]**
 
 ## Inspiration
