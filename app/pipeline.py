@@ -18,9 +18,9 @@ from genblaze_core import (
     StepBuilder,
     StepStatus,
 )
-from genblaze_core.providers import RetryPolicy
 
 from app.config import Settings
+from app.providers import CloudflareImageProvider
 from app.repository import RunRepository
 from app.schemas import (
     CampaignBrief,
@@ -170,7 +170,7 @@ class DemoPipeline:
 
 
 class LivePipeline:
-    """Runs one paid GMI Cloud image request and persists its outputs to B2."""
+    """Runs Cloudflare Workers AI image generation and persists outputs to B2."""
 
     def __init__(self, repository: RunRepository, settings: Settings) -> None:
         self.repository = repository
@@ -247,66 +247,79 @@ class LivePipeline:
         if missing:
             raise RuntimeError(f"Live mode is missing settings: {', '.join(missing)}")
 
-        from genblaze_gmicloud import GMICloudImageProvider
-
         created_at = datetime.now(UTC)
         prompt = DemoPipeline._build_prompt(brief)
-        model = self.settings.gmi_model or ""
-        provider = GMICloudImageProvider(
-            api_key=self.settings.gmi_api_key,
-            retry_policy=RetryPolicy.conservative(),
-        )
-        backend = self._open_backend()
-        sink = ObjectStorageSink(
-            backend,
-            prefix="proofstudio",
-            key_strategy=KeyStrategy.CONTENT_ADDRESSABLE,
+        model = self.settings.cloudflare_model
+        provider = CloudflareImageProvider(
+            account_id=self.settings.cloudflare_account_id or "",
+            api_token=self.settings.cloudflare_api_token or "",
+            timeout=self.settings.generation_timeout_seconds,
         )
         try:
-            result = (
-                Pipeline("proofstudio-live", project_id="proofstudio", preflight=True)
-                .step(
-                    provider,
-                    model=model,
-                    prompt=prompt,
-                    modality=Modality.IMAGE,
-                    aspect_ratio=brief.aspect_ratio,
-                    number_of_images=2,
+            backend = self._open_backend()
+            try:
+                sink = ObjectStorageSink(
+                    backend,
+                    prefix="proofstudio",
+                    key_strategy=KeyStrategy.CONTENT_ADDRESSABLE,
                 )
-                .run(
-                    sink=sink,
-                    fail_fast=True,
-                    timeout=self.settings.generation_timeout_seconds,
-                    max_retries=1,
+                result = (
+                    Pipeline("proofstudio-live", project_id="proofstudio", preflight=True)
+                    .step(
+                        provider,
+                        model=model,
+                        prompt=prompt,
+                        modality=Modality.IMAGE,
+                        aspect_ratio=brief.aspect_ratio,
+                        number_of_images=2,
+                    )
+                    .run(
+                        sink=sink,
+                        fail_fast=True,
+                        timeout=self.settings.generation_timeout_seconds,
+                        max_retries=0,
+                        raise_on_failure=True,
+                    )
                 )
-            )
+                assets = [asset for step in result.run.steps for asset in step.assets]
+                failed_steps = [
+                    step for step in result.run.steps if step.status is StepStatus.FAILED
+                ]
+                if failed_steps:
+                    raise RuntimeError(
+                        "The image provider rejected or failed the request. Check server logs."
+                    )
+                if len(assets) < 2:
+                    raise RuntimeError(
+                        "The provider completed without two stored image variants."
+                    )
+
+                media_assets = [
+                    MediaAsset(
+                        id=asset.asset_id,
+                        variant=index,
+                        url=asset.url,
+                        storage_key=backend.key_from_url(asset.url) or asset.url,
+                        mime_type=asset.media_type,
+                        sha256=asset.sha256 or "",
+                    )
+                    for index, asset in enumerate(assets[:2], start=1)
+                ]
+                provider_job_ids = [
+                    str(request_id)
+                    for step in result.run.steps
+                    for request_id in (step.provider_payload or {})
+                    .get("cloudflare", {})
+                    .get("request_ids", [])
+                    if request_id
+                ]
+                manifest_key = sink.manifest_key_for(result.run)
+                manifest_url = sink.manifest_url_for(result.run)
+            finally:
+                backend.close()
         finally:
             provider.close()
 
-        assets = [asset for step in result.run.steps for asset in step.assets]
-        if len(assets) < 2:
-            raise RuntimeError("The provider completed without two stored image variants.")
-
-        media_assets = [
-            MediaAsset(
-                id=asset.asset_id,
-                variant=index,
-                url=asset.url,
-                storage_key=backend.key_from_url(asset.url) or asset.url,
-                mime_type=asset.media_type,
-                sha256=asset.sha256 or "",
-            )
-            for index, asset in enumerate(assets[:2], start=1)
-        ]
-        provider_job_ids = [
-            str(request_id)
-            for step in result.run.steps
-            for request_id in [
-                (step.provider_payload or {}).get("gmicloud", {}).get("request_id")
-            ]
-            if request_id
-        ]
-        manifest_key = sink.manifest_key_for(result.run)
         run = GenerationRun(
             id=result.run.run_id,
             campaign=brief,
@@ -314,7 +327,7 @@ class LivePipeline:
             provider=provider.name,
             model=model,
             prompt=prompt,
-            manifest_url=sink.manifest_url_for(result.run),
+            manifest_url=manifest_url,
             manifest_hash=result.manifest.canonical_hash,
             verified=result.manifest.verify(),
             demo_mode=False,

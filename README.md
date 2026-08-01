@@ -27,7 +27,7 @@ external account setup.
 - Store assets and provenance manifests in Backblaze B2.
 - Display run status, durable asset URLs, provider, model, parameters, and hashes.
 - Verify manifest integrity.
-- Retry a failed run without silently creating duplicate paid generations.
+- Retry a failed run without silently creating duplicate provider generations.
 - Browse previous runs after a page reload.
 
 ## Architecture
@@ -37,8 +37,8 @@ flowchart LR
     Browser["Browser UI"] --> API["FastAPI application"]
     API --> Repo["Local JSON run index"]
     API --> Pipeline["Genblaze Pipeline"]
-    Pipeline --> GMI["GMI Cloud image model"]
-    GMI --> Pipeline
+    Pipeline --> Cloudflare["Cloudflare Workers AI / FLUX.2 klein 4B"]
+    Cloudflare --> Pipeline
     Pipeline --> Sink["ObjectStorageSink"]
     Sink --> B2["Backblaze B2"]
     B2 --> Assets["Content-addressed assets"]
@@ -78,13 +78,15 @@ Open <http://127.0.0.1:8000>.
 
 ## Live setup
 
-Live Mode uses `genblaze-gmicloud==0.3.5` and `genblaze-s3==0.3.6` with
-`genblaze-core==0.3.8`.
+Live Mode uses a project-owned Cloudflare Workers AI adapter with
+`genblaze-s3==0.3.6` and `genblaze-core==0.3.8`.
 
 1. Create a dedicated private B2 bucket containing only non-sensitive demo
    media. Public-bucket billing verification is not required.
 2. Create a bucket-scoped key with list, read, and write access.
-3. Create a GMI Cloud API key and select an image model available to that key.
+3. On the Cloudflare Workers AI page, select `Use REST API`, create the
+   prefilled Workers AI token, and copy the Account ID. A custom token needs
+   only account-level `Workers AI - Read` and `Workers AI - Edit` permissions.
 4. Populate `.env` without committing it.
 5. Set `DEMO_MODE=false`.
 
@@ -97,26 +99,27 @@ B2_KEY_ID=
 B2_APP_KEY=
 B2_BUCKET=
 B2_REGION=
-GMI_API_KEY=
-GMI_MODEL=
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_MODEL=@cf/black-forest-labs/flux-2-klein-4b
 ```
 
 `B2_PUBLIC_URL_BASE` is optional. When it is unset, Genblaze records durable
 `APP_BASE_URL/api/storage/...` links and ProofStudio retrieves only recorded
 assets and manifests from the private bucket using server-side credentials.
 
-Validate access without making a paid generation request:
+Validate access without running generation or consuming Workers AI Neurons:
 
 ```powershell
 uv sync --all-extras
 uv run python scripts/validate_live.py
 ```
 
-Run the paid technical gate only after reviewing the selected model and its
-price:
+Run the technical gate only after confirming use of the daily Workers AI free
+allocation:
 
 ```powershell
-uv run python scripts/live_smoke.py --confirm-paid-run
+uv run python scripts/live_smoke.py --confirm-generation
 ```
 
 ## B2 object layout
@@ -138,7 +141,7 @@ presigned URLs or sends storage/provider credentials to the browser.
 Real generation and B2 persistence will require:
 
 - a bucket-scoped Backblaze B2 application key;
-- one supported media provider API key.
+- a Cloudflare Workers AI API token scoped to the project account.
 
 Never commit `.env` or expose credentials in browser code, logs, screenshots, or
 demo materials.
@@ -156,10 +159,12 @@ and pull request.
 
 ## Deployment
 
-The included `render.yaml` defines one Render web service, a persistent local
-index disk, a health check, and server-side secret placeholders. After pushing
-the repository, create a Render Blueprint and enter every variable marked
-`sync: false` in the Render dashboard. Do not put secret values in the YAML.
+The included `render.yaml` defines one free Render web service, a health check,
+and server-side secret placeholders. Its filesystem is intentionally treated as
+an ephemeral cache: authoritative run metadata, manifests, and assets live in
+B2 and are restored when the app starts. After pushing the repository, create a
+Render Blueprint and enter every variable marked `sync: false` in the Render
+dashboard. Do not put secret values in the YAML.
 
 Before sharing the URL with judges, verify:
 

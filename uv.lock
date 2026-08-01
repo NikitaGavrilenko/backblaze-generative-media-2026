@@ -181,19 +181,6 @@ wheels = [
 ]
 
 [[package]]
-name = "genblaze-gmicloud"
-version = "0.3.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "genblaze-core" },
-    { name = "httpx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b7/77/2d48ce439ca150b1b8539a55d537455299a67cad86d66da57298657f1097/genblaze_gmicloud-0.3.5.tar.gz", hash = "sha256:2fd4e0e956fa3d84698685e4deb9f73e3795a16534e0b0be64a67a9ea78e6c3c", size = 46868, upload-time = "2026-07-28T20:51:07.234Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/91/8c/e302008035caea9a5174e9b20617b865295349735a4c869df45b1e96139c/genblaze_gmicloud-0.3.5-py3-none-any.whl", hash = "sha256:fff0684dae3b7a2f0bab4c9ebd881a158cf5c703fa9a2464c5c6f47e27c3936e", size = 37011, upload-time = "2026-07-28T20:51:06.053Z" },
-]
-
-[[package]]
 name = "genblaze-s3"
 version = "0.3.6"
 source = { registry = "https://pypi.org/simple" }
@@ -387,6 +374,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "genblaze-core" },
+    { name = "httpx" },
     { name = "pydantic-settings" },
     { name = "python-multipart" },
     { name = "uvicorn", extra = ["standard"] },
@@ -397,22 +385,17 @@ b2 = [
     { name = "genblaze-s3" },
 ]
 dev = [
-    { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
-]
-gmi = [
-    { name = "genblaze-gmicloud" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116,<1" },
     { name = "genblaze-core", specifier = "==0.3.8" },
-    { name = "genblaze-gmicloud", marker = "extra == 'gmi'", specifier = "==0.3.5" },
     { name = "genblaze-s3", marker = "extra == 'b2'", specifier = "==0.3.6" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28,<1" },
+    { name = "httpx", specifier = ">=0.28,<1" },
     { name = "pydantic-settings", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4,<9" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2,<7" },
@@ -420,7 +403,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12,<1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35,<1" },
 ]
-provides-extras = ["b2", "gmi", "dev"]
+provides-extras = ["b2", "dev"]
 
 [[package]]
 name = "pydantic"

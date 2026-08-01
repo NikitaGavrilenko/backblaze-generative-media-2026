@@ -50,27 +50,27 @@ present.
   verification results.
 - `genblaze-core==0.3.8` orchestrates generation and creates the provenance
   manifest.
-- `genblaze-gmicloud==0.3.5` connects the selected GMI Cloud image model.
+- A project-owned Genblaze `SyncProvider` adapter connects Cloudflare Workers AI.
 - `genblaze-s3==0.3.6` and `ObjectStorageSink` persist content-addressed assets
   and manifests to Backblaze B2.
 - A small JSON run index is mirrored to B2, avoiding a database while allowing
   gallery recovery after an application restart.
-- Render configuration keeps all credentials server-side and mounts a small
-  persistent disk for the local cache.
+- Render configuration keeps all credentials server-side. The local cache may
+  be ephemeral because authoritative run records and media are restored from B2.
 
 ## Providers and models
 
-- Provider: GMI Cloud
-- Model: **[REQUIRED: exact verified GMI_MODEL]**
+- Provider: Cloudflare Workers AI
+- Model: `@cf/black-forest-labs/flux-2-klein-4b`
 - Generation settings: two image variants; campaign-selected aspect ratio
 
 ## How ProofStudio uses Genblaze
 
 Genblaze is the execution and provenance boundary, not a metadata label added
-after generation. The live request is a Genblaze `Pipeline` step using the GMI
-Cloud provider. `ObjectStorageSink` transfers outputs to B2, calculates and
-records content hashes, writes the canonical manifest, and replaces temporary
-provider URLs with durable B2 URLs.
+after generation. The live request is a Genblaze `Pipeline` step using the
+project-owned Cloudflare Workers AI provider. `ObjectStorageSink` transfers
+outputs to B2, calculates and records content hashes, writes the canonical
+manifest, and replaces temporary provider files with durable B2 URLs.
 
 ## How ProofStudio uses Backblaze B2
 
@@ -83,10 +83,10 @@ and manifests belonging to recorded runs without leaking B2 credentials.
 
 ## Challenges
 
-The difficult part was making retries and storage behavior honest for paid,
-asynchronous generation. A provider success followed by a storage failure must
-not silently become another paid request. ProofStudio uses idempotency keys,
-records provider job identifiers, and separates Demo Mode from Live Mode so an
+The difficult part was making retries and storage behavior honest for
+quota-backed generation. A provider success followed by a storage failure must
+not silently become another request. ProofStudio uses idempotency keys, records
+provider request identifiers, and separates Demo Mode from Live Mode so an
 offline fixture can never be presented as a real AI output.
 
 ## Accomplishments

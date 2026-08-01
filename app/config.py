@@ -19,8 +19,9 @@ class Settings(BaseSettings):
     b2_bucket: str | None = None
     b2_region: str | None = None
     b2_public_url_base: str | None = None
-    gmi_api_key: str | None = None
-    gmi_model: str | None = None
+    cloudflare_account_id: str | None = None
+    cloudflare_api_token: str | None = None
+    cloudflare_model: str = "@cf/black-forest-labs/flux-2-klein-4b"
     generation_timeout_seconds: int = 300
 
     model_config = SettingsConfigDict(
@@ -36,8 +37,8 @@ class Settings(BaseSettings):
             "B2_APP_KEY": self.b2_app_key,
             "B2_BUCKET": self.b2_bucket,
             "B2_REGION": self.b2_region,
-            "GMI_API_KEY": self.gmi_api_key,
-            "GMI_MODEL": self.gmi_model,
+            "CLOUDFLARE_ACCOUNT_ID": self.cloudflare_account_id,
+            "CLOUDFLARE_API_TOKEN": self.cloudflare_api_token,
         }
         return [name for name, value in required.items() if not value]
 

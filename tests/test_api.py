@@ -37,7 +37,7 @@ def test_live_mode_reports_missing_configuration(tmp_path: Path) -> None:
     )
 
     assert health.json()["status"] == "degraded"
-    assert "GMI_API_KEY" in health.json()["missing_settings"]
+    assert "CLOUDFLARE_API_TOKEN" in health.json()["missing_settings"]
     assert created.status_code == 503
 
 
@@ -90,8 +90,8 @@ def test_private_b2_proxy_only_serves_recorded_objects(tmp_path: Path, monkeypat
         b2_app_key="app-key",
         b2_bucket="bucket",
         b2_region="us-west-004",
-        gmi_api_key="gmi-key",
-        gmi_model="image-model",
+        cloudflare_account_id="account-id",
+        cloudflare_api_token="api-token",
     )
     app = create_app(settings)
     demo_run = DemoPipeline(app.state.repository).run(
