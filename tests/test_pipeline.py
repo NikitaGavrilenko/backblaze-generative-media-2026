@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from app.pipeline import DemoPipeline
+from app.config import Settings
+from app.pipeline import DemoPipeline, LivePipeline
 from app.repository import RunRepository
 from app.schemas import CampaignBrief
 
@@ -63,3 +64,43 @@ def test_verification_detects_modified_manifest(tmp_path: Path) -> None:
 
     assert result.verified is False
     assert "Manifest is invalid" in result.errors[0]
+
+
+def test_live_pipeline_rewrites_stale_storage_urls(tmp_path: Path) -> None:
+    repository = RunRepository(tmp_path)
+    demo_run = DemoPipeline(repository).run(sample_brief(), None)
+    stale_run = demo_run.model_copy(
+        update={
+            "demo_mode": False,
+            "manifest_url": "http://127.0.0.1:8000/old-manifest.json",
+            "manifest_storage_key": "proofstudio/manifests/example.json",
+            "assets": [
+                asset.model_copy(
+                    update={
+                        "url": "https://old-deployment.example/asset.jpg",
+                        "storage_key": f"proofstudio/assets/{asset.id}.jpg",
+                    }
+                )
+                for asset in demo_run.assets
+            ],
+        }
+    )
+    pipeline = LivePipeline(
+        repository,
+        Settings(
+            _env_file=None,
+            app_base_url="https://proofstudio.example",
+            data_dir=tmp_path,
+            demo_mode=False,
+        ),
+    )
+
+    normalized = pipeline._with_public_storage_urls(stale_run)
+
+    assert normalized.manifest_url == (
+        "https://proofstudio.example/api/storage/proofstudio/manifests/example.json"
+    )
+    assert all(
+        asset.url == f"https://proofstudio.example/api/storage/{asset.storage_key}"
+        for asset in normalized.assets
+    )

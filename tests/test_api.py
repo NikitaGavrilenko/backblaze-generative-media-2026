@@ -9,7 +9,7 @@ from app.schemas import CampaignBrief
 
 
 def build_client(tmp_path: Path) -> TestClient:
-    app = create_app(Settings(data_dir=tmp_path, demo_mode=True))
+    app = create_app(Settings(_env_file=None, data_dir=tmp_path, demo_mode=True))
     return TestClient(app)
 
 
@@ -22,7 +22,7 @@ def test_health(tmp_path: Path) -> None:
 
 
 def test_live_mode_reports_missing_configuration(tmp_path: Path) -> None:
-    app = create_app(Settings(data_dir=tmp_path, demo_mode=False))
+    app = create_app(Settings(_env_file=None, data_dir=tmp_path, demo_mode=False))
     client = TestClient(app)
 
     health = client.get("/api/health")
@@ -83,6 +83,7 @@ def test_rejects_invalid_brief(tmp_path: Path) -> None:
 
 def test_private_b2_proxy_only_serves_recorded_objects(tmp_path: Path, monkeypatch) -> None:
     settings = Settings(
+        _env_file=None,
         app_base_url="https://proofstudio.example",
         data_dir=tmp_path,
         demo_mode=False,
