@@ -72,15 +72,15 @@ Complete after the required credentials are available.
 - [x] Install the pinned `genblaze-s3` package.
 - [x] Add a project-owned Genblaze adapter for Cloudflare Workers AI.
 - [x] Validate B2 authentication and bucket access.
-- [ ] Validate the provider API key and list available image models.
+- [x] Validate the provider API key and list available image models.
 - [x] Select one supported image model with acceptable cost and latency.
-- [ ] Run one low-cost image generation request.
-- [ ] Persist the generated asset through `ObjectStorageSink`.
-- [ ] Persist the canonical provenance manifest to B2.
+- [x] Run one generation request within the Workers AI free allocation.
+- [x] Persist the generated assets through `ObjectStorageSink`.
+- [x] Persist the canonical provenance manifest to B2.
 - [ ] Confirm that the application-backed asset URL is durable and publicly
   accessible while the B2 bucket remains private.
-- [ ] Verify the asset SHA-256 and Genblaze manifest.
-- [ ] Record the working package, provider, and model versions.
+- [x] Verify the asset SHA-256 and Genblaze manifest.
+- [x] Record the working package, provider, and model versions.
 
 Technical gate:
 
@@ -119,7 +119,7 @@ Do not continue to optional features until this gate passes.
 
 ## 5. Product and interface
 
-- [ ] Replace demo SVG fixtures with live generated images.
+- [x] Replace demo SVG fixtures with live generated images in Live Mode.
 - [ ] Add visible `generating`, `storing`, `completed`, and `failed` states.
 - [ ] Add a retry action for failed runs.
 - [x] Add a clear distinction between Demo Mode and Live Mode.
@@ -153,7 +153,7 @@ Deferred until the core flow is stable:
 - [x] Update the README with the selected provider and model.
 - [x] Document the B2 object layout implemented by the live pipeline.
 - [x] Add an architecture diagram.
-- [ ] Save one successful pre-generated demo run.
+- [x] Save one successful pre-generated demo run in B2.
 - [ ] Save one controlled failure example.
 - [x] Write a demo script shorter than three minutes.
 - [ ] Record the real working application.

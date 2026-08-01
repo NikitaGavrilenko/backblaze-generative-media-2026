@@ -6,16 +6,16 @@ durable system of record for assets and manifests.
 
 ## Current status
 
-The complete local demo is verified. A credential-gated live implementation is
-also included, but it must pass one real end-to-end run before deployment and
-submission:
+The complete local demo and the credential-gated live implementation are
+verified. The live technical gate passed with two generated images, durable B2
+storage, a canonical manifest, and asset hash verification:
 
 ```text
 provider -> Genblaze -> Backblaze B2 -> provenance manifest -> SHA-256 verification
 ```
 
-The UI always labels Demo Mode, and live claims should only be made after the
-credentialed gate succeeds.
+The UI always labels Demo Mode. Deployment and public-browser verification are
+still required before submission.
 
 See [TODO.md](TODO.md) for the current implementation checklist and required
 external account setup.

@@ -1,7 +1,7 @@
 # ProofStudio — Devpost Submission Draft
 
-> Submission status: **not ready to submit until every REQUIRED placeholder is
-> replaced and the live technical gate passes.**
+> Submission status: **live technical gate passed; not ready to submit until
+> the deployment and video placeholders are replaced.**
 
 Submission deadline: August 3, 2026 at 5:00 PM ET.
 
@@ -64,6 +64,14 @@ present.
 - Model: `@cf/black-forest-labs/flux-2-klein-4b`
 - Generation settings: two image variants; campaign-selected aspect ratio
 
+Verified live gate on August 1, 2026:
+
+- Run ID: `67c1cbf8-1e4a-4297-aac0-59adbc3cb666`
+- Generated and stored assets: 2
+- Canonical manifest hash:
+  `e782450187968d1a0c010ca1115944bb528c2cb7612fc60d42ba466c361853f0`
+- B2 asset and manifest verification: passed
+
 ## How ProofStudio uses Genblaze
 
 Genblaze is the execution and provenance boundary, not a metadata label added
@@ -117,7 +125,7 @@ campaign workflow.
 
 - [ ] Public app URL opens without authentication.
 - [ ] Health response reports fully configured Live Mode.
-- [ ] Exact provider and model above match the successful run manifest.
+- [x] Exact provider and model above match the successful run manifest.
 - [ ] Two public application asset URLs backed by private B2 objects work in an
   incognito browser.
 - [ ] The application manifest URL works and its hash matches the UI.
