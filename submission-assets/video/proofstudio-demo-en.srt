@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:07,000
+ProofStudio creates durable, verifiable generative media.
+
+2
+00:00:07,000 --> 00:00:18,000
+A single application connects structured creative direction, generation, storage, and verification.
+
+3
+00:00:18,000 --> 00:00:30,000
+The campaign brief captures audience, message, tone, constraints, and aspect ratio as structured input.
+
+4
+00:00:30,000 --> 00:00:41,000
+Live Mode restores durable run history from private Backblaze B2 after deployment restarts.
+
+5
+00:00:41,000 --> 00:00:56,000
+This public run generated two landscape variants with Cloudflare Workers AI and stored both originals in B2.
+
+6
+00:00:56,000 --> 00:01:12,000
+Genblaze records the exact model, prompt, parameters, provider request IDs, asset hashes, and canonical manifest hash.
+
+7
+00:01:12,000 --> 00:01:25,000
+Verification downloads the stored manifest and assets, then recomputes every SHA-256 hash.
+
+8
+00:01:25,000 --> 00:01:34,000
+Two images. One canonical manifest. Verifiable after restart.

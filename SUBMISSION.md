@@ -1,7 +1,8 @@
 # ProofStudio — Devpost Submission Draft
 
-> Submission status: **public live technical gate passed; add the demo video
-> URL and complete the final Devpost form before submission.**
+> Submission status: **public live technical gate passed and the demo video is
+> rendered locally; upload it, add the public URL, and complete the final Devpost
+> form before submission.**
 
 Submission deadline: August 3, 2026 at 5:00 PM ET.
 
@@ -17,7 +18,7 @@ Turn campaign briefs into durable, verifiable generative media runs.
 
 - Working application: <https://proofstudio-h3ds.onrender.com>
 - Source repository: <https://github.com/NikitaGavrilenko/backblaze-generative-media-2026>
-- Demo video: **[REQUIRED: public video URL, approximately three minutes]**
+- Demo video: **[UPLOAD REQUIRED: `submission-assets/video/proofstudio-demo.mp4`]**
 
 ## Inspiration
 
@@ -139,5 +140,5 @@ campaign workflow.
 - [x] GitHub repository contains setup instructions and no secrets.
 - [x] Repository is public, or the private repository grants `b2genblaze`
   contributor access for judging.
-- [ ] Demo video shows the real app working in approximately three minutes.
+- [x] Demo video shows the real app working in under three minutes.
 - [ ] Every placeholder in this document has been removed.

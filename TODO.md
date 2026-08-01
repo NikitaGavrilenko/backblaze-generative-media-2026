@@ -29,13 +29,13 @@ Official guide:
 
 ### Media provider
 
-- [ ] Create or sign in to a Cloudflare account on the Free plan.
-- [ ] Open `AI -> Workers AI` and select `Use REST API`.
-- [ ] Create the prefilled Workers AI API token.
-- [ ] For a custom token, grant only account-level `Workers AI - Read` and
+- [x] Create or sign in to a Cloudflare account on the Free plan.
+- [x] Open `AI -> Workers AI` and select `Use REST API`.
+- [x] Create the prefilled Workers AI API token.
+- [x] For a custom token, grant only account-level `Workers AI - Read` and
   `Workers AI - Edit` permissions for the selected account.
-- [ ] Copy the Account ID and API token when shown.
-- [ ] Do not upgrade to Workers Paid for this MVP.
+- [x] Copy the Account ID and API token when shown.
+- [x] Do not upgrade to Workers Paid for this MVP.
 
 Official guide:
 <https://developers.cloudflare.com/workers-ai/get-started/rest-api/>
@@ -48,10 +48,10 @@ requirements.
 ### Local environment
 
 - [x] Copy `.env.example` to `.env`.
-- [ ] Add the Backblaze and provider credentials to `.env`.
-- [ ] Do not send credentials through chat.
-- [ ] Do not commit `.env`.
-- [ ] Tell the development agent that setup is ready without sharing key values.
+- [x] Add the Backblaze and provider credentials to `.env`.
+- [x] Do not send credentials through chat.
+- [x] Do not commit `.env`.
+- [x] Tell the development agent that setup is ready without sharing key values.
 
 Required variables:
 
@@ -156,10 +156,10 @@ Deferred until the core flow is stable:
 - [x] Save one successful pre-generated demo run in B2.
 - [ ] Save one controlled failure example.
 - [x] Write a demo script shorter than three minutes.
-- [ ] Record the real working application.
-- [ ] Capture screenshots of generation, provenance, history, and verification.
-- [ ] Ensure every claimed feature is visible and implemented.
-- [ ] Keep all documentation and demo materials in English.
+- [x] Record the real working application.
+- [x] Capture screenshots of generation, provenance, history, and verification.
+- [x] Ensure every claimed feature is visible and implemented.
+- [x] Keep all documentation and demo materials in English.
 
 ## Current verified state
 
@@ -179,6 +179,6 @@ Deferred until the core flow is stable:
 - [x] SHA-256 tamper detection implemented.
 - [x] Browser flow checked without console errors.
 - [x] Lint passes.
-- [x] Eleven automated tests pass, including mocked Cloudflare image responses.
+- [x] Thirteen automated tests pass, including mocked Cloudflare image responses.
 - [x] GitHub Actions passes on the public repository.
 - [x] Public project artifacts contain no Cyrillic text.
