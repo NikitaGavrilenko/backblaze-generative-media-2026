@@ -1,7 +1,7 @@
 # ProofStudio — Devpost Submission Draft
 
-> Submission status: **live technical gate passed; not ready to submit until
-> the deployment and video placeholders are replaced.**
+> Submission status: **public live technical gate passed; add the demo video
+> URL and complete the final Devpost form before submission.**
 
 Submission deadline: August 3, 2026 at 5:00 PM ET.
 
@@ -15,7 +15,7 @@ Turn campaign briefs into durable, verifiable generative media runs.
 
 ## Links
 
-- Working application: **[REQUIRED: public deployment URL]**
+- Working application: <https://proofstudio-h3ds.onrender.com>
 - Source repository: <https://github.com/NikitaGavrilenko/backblaze-generative-media-2026>
 - Demo video: **[REQUIRED: public video URL, approximately three minutes]**
 
@@ -66,10 +66,16 @@ present.
 
 Verified live gate on August 1, 2026:
 
-- Run ID: `67c1cbf8-1e4a-4297-aac0-59adbc3cb666`
+- Run ID: `ffa93c15-2044-4e68-afde-fb002d7af042`
 - Generated and stored assets: 2
 - Canonical manifest hash:
-  `e782450187968d1a0c010ca1115944bb528c2cb7612fc60d42ba466c361853f0`
+  `eb24129005ef3245778ceac5f0a2c61e6aeb4b515b47d0aa6645a432a96da481`
+- Public manifest:
+  <https://proofstudio-h3ds.onrender.com/api/storage/proofstudio/manifests/ffa93c15-2044-4e68-afde-fb002d7af042.json>
+- Public assets:
+  <https://proofstudio-h3ds.onrender.com/api/storage/proofstudio/assets/25/88/2588c9204f83c58f1205af72eab0c4d37a2c356f5026d6a9b965a7ded33072f5.jpg>
+  and
+  <https://proofstudio-h3ds.onrender.com/api/storage/proofstudio/assets/30/e2/30e2cc2c358c756392a6f58e692cb59c588a1df7e0825968e6f2e32d79d93ee0.jpg>
 - B2 asset and manifest verification: passed
 
 ## How ProofStudio uses Genblaze
@@ -123,15 +129,15 @@ campaign workflow.
 
 ## Final evidence checklist
 
-- [ ] Public app URL opens without authentication.
-- [ ] Health response reports fully configured Live Mode.
+- [x] Public app URL opens without authentication.
+- [x] Health response reports fully configured Live Mode.
 - [x] Exact provider and model above match the successful run manifest.
-- [ ] Two public application asset URLs backed by private B2 objects work in an
+- [x] Two public application asset URLs backed by private B2 objects work in an
   incognito browser.
-- [ ] The application manifest URL works and its hash matches the UI.
-- [ ] Verification succeeds after a fresh application restart.
-- [ ] GitHub repository contains setup instructions and no secrets.
-- [ ] Repository is public, or the private repository grants `b2genblaze`
+- [x] The application manifest URL works and its hash matches the UI.
+- [x] Verification succeeds after a fresh application restart.
+- [x] GitHub repository contains setup instructions and no secrets.
+- [x] Repository is public, or the private repository grants `b2genblaze`
   contributor access for judging.
 - [ ] Demo video shows the real app working in approximately three minutes.
 - [ ] Every placeholder in this document has been removed.

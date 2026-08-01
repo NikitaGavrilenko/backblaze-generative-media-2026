@@ -77,7 +77,7 @@ Complete after the required credentials are available.
 - [x] Run one generation request within the Workers AI free allocation.
 - [x] Persist the generated assets through `ObjectStorageSink`.
 - [x] Persist the canonical provenance manifest to B2.
-- [ ] Confirm that the application-backed asset URL is durable and publicly
+- [x] Confirm that the application-backed asset URL is durable and publicly
   accessible while the B2 bucket remains private.
 - [x] Verify the asset SHA-256 and Genblaze manifest.
 - [x] Record the working package, provider, and model versions.
@@ -123,7 +123,7 @@ Do not continue to optional features until this gate passes.
 - [ ] Add visible `generating`, `storing`, `completed`, and `failed` states.
 - [ ] Add a retry action for failed runs.
 - [x] Add a clear distinction between Demo Mode and Live Mode.
-- [ ] Confirm that the updated main workflow works on a mobile-sized screen.
+- [x] Confirm that the updated main workflow works on a mobile-sized screen.
 - [x] Keep all UI copy and public artifacts in English.
 - [x] Remove any unnecessary personal information from public artifacts.
 
@@ -140,9 +140,9 @@ Deferred until the core flow is stable:
 
 - [x] Select a deployment platform that supports Python 3.11+ (Render).
 - [x] Configure secret placeholders through the deployment platform, not source files.
-- [ ] Deploy the FastAPI application.
-- [ ] Verify the application from a private/incognito browser session.
-- [ ] Confirm that generated files remain available after application restart.
+- [x] Deploy the FastAPI application.
+- [x] Verify the application from a private/incognito browser session.
+- [x] Confirm that generated files remain available after application restart.
 - [x] Add a health check for the app and live provider/storage configuration.
 - [x] Review Git history for accidentally committed secrets.
 - [x] Create a clean initial commit.
