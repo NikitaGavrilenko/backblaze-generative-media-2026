@@ -27,8 +27,6 @@ services:
         sync: false
       - key: B2_REGION
         sync: false
-      - key: B2_PUBLIC_URL_BASE
-        sync: false
       - key: GMI_API_KEY
         sync: false
       - key: GMI_MODEL

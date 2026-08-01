@@ -20,7 +20,8 @@ project owner.
 
 Recommended bucket configuration:
 
-- public read access for non-sensitive demo assets;
+- private bucket access; ProofStudio serves recorded assets through its public
+  application endpoint;
 - no customer, private, or personally identifiable data;
 - no Object Lock for the MVP;
 - a dedicated bucket rather than an existing personal bucket.
@@ -73,7 +74,8 @@ Complete after the required credentials are available.
 - [ ] Run one low-cost image generation request.
 - [ ] Persist the generated asset through `ObjectStorageSink`.
 - [ ] Persist the canonical provenance manifest to B2.
-- [ ] Confirm that the returned asset URL is durable and publicly accessible.
+- [ ] Confirm that the application-backed asset URL is durable and publicly
+  accessible while the B2 bucket remains private.
 - [ ] Verify the asset SHA-256 and Genblaze manifest.
 - [ ] Record the working package, provider, and model versions.
 

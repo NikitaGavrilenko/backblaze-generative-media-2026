@@ -77,7 +77,9 @@ provider URLs with durable B2 URLs.
 B2 is the durable system of record for generated media, canonical manifests,
 and gallery run metadata. Assets use content-addressed keys for deduplication.
 The verification endpoint downloads the stored manifest and assets from B2,
-checks the canonical manifest hash, and recalculates each asset's SHA-256.
+checks the canonical manifest hash, and recalculates each asset's SHA-256. The
+bucket remains private; a restricted application endpoint exposes only assets
+and manifests belonging to recorded runs without leaking B2 credentials.
 
 ## Challenges
 
@@ -116,8 +118,9 @@ campaign workflow.
 - [ ] Public app URL opens without authentication.
 - [ ] Health response reports fully configured Live Mode.
 - [ ] Exact provider and model above match the successful run manifest.
-- [ ] Two public B2 asset URLs work in an incognito browser.
-- [ ] Public B2 manifest URL works and its hash matches the UI.
+- [ ] Two public application asset URLs backed by private B2 objects work in an
+  incognito browser.
+- [ ] The application manifest URL works and its hash matches the UI.
 - [ ] Verification succeeds after a fresh application restart.
 - [ ] GitHub repository contains setup instructions and no secrets.
 - [ ] Repository is public, or the private repository grants `b2genblaze`

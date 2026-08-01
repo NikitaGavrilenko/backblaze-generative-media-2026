@@ -185,10 +185,21 @@ class LivePipeline:
             region=self.settings.b2_region,
             key_id=self.settings.b2_key_id,
             app_key=self.settings.b2_app_key,
-            public_url_base=self.settings.b2_public_url_base,
+            public_url_base=self.settings.storage_public_url_base,
             auto_lifecycle=False,
             preflight=True,
         )
+
+    def fetch_object(self, key: str) -> tuple[bytes, str]:
+        """Fetch an approved B2 object for delivery through the public app."""
+        backend = self._open_backend()
+        try:
+            metadata = backend.head(key)
+            if metadata is None:
+                raise FileNotFoundError(key)
+            return backend.get(key), metadata.content_type or "application/octet-stream"
+        finally:
+            backend.close()
 
     def sync_repository(self) -> None:
         """Hydrate local run history from B2 once per application process."""

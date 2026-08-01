@@ -81,8 +81,8 @@ Open <http://127.0.0.1:8000>.
 Live Mode uses `genblaze-gmicloud==0.3.5` and `genblaze-s3==0.3.6` with
 `genblaze-core==0.3.8`.
 
-1. Create a dedicated public-read B2 bucket containing only non-sensitive demo
-   media.
+1. Create a dedicated private B2 bucket containing only non-sensitive demo
+   media. Public-bucket billing verification is not required.
 2. Create a bucket-scoped key with list, read, and write access.
 3. Create a GMI Cloud API key and select an image model available to that key.
 4. Populate `.env` without committing it.
@@ -92,14 +92,18 @@ Required live variables:
 
 ```dotenv
 DEMO_MODE=false
+APP_BASE_URL=https://your-proofstudio-deployment.example
 B2_KEY_ID=
 B2_APP_KEY=
 B2_BUCKET=
 B2_REGION=
-B2_PUBLIC_URL_BASE=https://f000.backblazeb2.com/file/example-bucket
 GMI_API_KEY=
 GMI_MODEL=
 ```
+
+`B2_PUBLIC_URL_BASE` is optional. When it is unset, Genblaze records durable
+`APP_BASE_URL/api/storage/...` links and ProofStudio retrieves only recorded
+assets and manifests from the private bucket using server-side credentials.
 
 Validate access without making a paid generation request:
 
@@ -124,8 +128,10 @@ proofstudio/
 └── app-runs/{run-id}.json               # ProofStudio gallery metadata
 ```
 
-The application stores credential-free durable URLs in manifests. It never
-persists presigned URLs or sends storage/provider credentials to the browser.
+The application stores credential-free durable URLs in manifests. Private B2
+objects are exposed through a restricted application endpoint that serves only
+assets and manifests belonging to recorded runs. ProofStudio never persists
+presigned URLs or sends storage/provider credentials to the browser.
 
 ## Credentials
 

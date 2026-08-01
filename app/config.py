@@ -36,11 +36,17 @@ class Settings(BaseSettings):
             "B2_APP_KEY": self.b2_app_key,
             "B2_BUCKET": self.b2_bucket,
             "B2_REGION": self.b2_region,
-            "B2_PUBLIC_URL_BASE": self.b2_public_url_base,
             "GMI_API_KEY": self.gmi_api_key,
             "GMI_MODEL": self.gmi_model,
         }
         return [name for name, value in required.items() if not value]
+
+    @property
+    def storage_public_url_base(self) -> str:
+        """Return stable public URLs without requiring a public B2 bucket."""
+        if self.b2_public_url_base:
+            return self.b2_public_url_base.rstrip("/")
+        return f"{self.app_base_url.rstrip('/')}/api/storage"
 
 
 @lru_cache
