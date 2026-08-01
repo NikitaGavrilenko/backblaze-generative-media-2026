@@ -1,14 +1,16 @@
 # ProofStudio
 
+Live application: <https://proofstudio-h3ds.onrender.com>
+
 ProofStudio turns a structured campaign brief into traceable generative media
 runs. Genblaze orchestrates generation and provenance, while Backblaze B2 is the
 durable system of record for assets and manifests.
 
 ## Current status
 
-The complete local demo and the credential-gated live implementation are
-verified. The live technical gate passed with two generated images, durable B2
-storage, a canonical manifest, and asset hash verification:
+The deployed live implementation is verified. The public technical gate passed
+with two generated images, durable B2 storage, a canonical manifest, and asset
+hash verification:
 
 ```text
 provider -> Genblaze -> Backblaze B2 -> provenance manifest -> SHA-256 verification
