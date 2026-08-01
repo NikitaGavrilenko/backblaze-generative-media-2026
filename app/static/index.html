@@ -70,7 +70,7 @@
           <span>Generate traceable variants</span>
           <span aria-hidden="true">→</span>
         </button>
-        <p class="form-note">Demo mode creates local fixtures and a real Genblaze manifest. No paid AI call is made.</p>
+        <p id="mode-note" class="form-note">Checking runtime mode…</p>
       </form>
 
       <section class="panel results-panel">
@@ -85,7 +85,7 @@
         <div id="empty-state" class="empty-state">
           <div class="empty-orbit"><span></span></div>
           <h3>No run selected</h3>
-          <p>Submit a brief to create two demo assets and a canonical Genblaze provenance manifest.</p>
+          <p>Submit a brief to create two assets and a canonical Genblaze provenance manifest.</p>
         </div>
 
         <div id="run-view" class="run-view" hidden>
@@ -123,7 +123,7 @@
           <p class="step">03 / DURABLE HISTORY</p>
           <h2>Previous runs</h2>
         </div>
-        <p>Local repository today. Backblaze B2 is the next integration gate.</p>
+        <p id="history-note">Loading durable run history…</p>
       </div>
       <div id="history-grid" class="history-grid"></div>
     </section>
@@ -131,7 +131,7 @@
 
   <footer>
     <span>Built with Genblaze</span>
-    <span>Backblaze B2 integration pending credentials</span>
+    <span id="storage-indicator">Checking durable storage…</span>
   </footer>
 
   <script src="/static/app.js" defer></script>

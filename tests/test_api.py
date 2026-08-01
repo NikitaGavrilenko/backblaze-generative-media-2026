@@ -21,6 +21,16 @@ def test_health(tmp_path: Path) -> None:
     assert response.json()["mode"] == "demo"
 
 
+def test_homepage_uses_runtime_storage_copy(tmp_path: Path) -> None:
+    response = build_client(tmp_path).get("/")
+
+    assert response.status_code == 200
+    assert 'id="mode-note"' in response.text
+    assert 'id="storage-indicator"' in response.text
+    assert "integration pending credentials" not in response.text
+    assert "Backblaze B2 is the next integration gate" not in response.text
+
+
 def test_live_mode_reports_missing_configuration(tmp_path: Path) -> None:
     app = create_app(Settings(_env_file=None, data_dir=tmp_path, demo_mode=False))
     client = TestClient(app)
