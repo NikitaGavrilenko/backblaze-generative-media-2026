@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from app.pipeline import DemoPipeline
+from app.schemas import CampaignBrief
 
 
 def build_client(tmp_path: Path) -> TestClient:
@@ -77,3 +79,57 @@ def test_rejects_invalid_brief(tmp_path: Path) -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_private_b2_proxy_only_serves_recorded_objects(tmp_path: Path, monkeypatch) -> None:
+    settings = Settings(
+        app_base_url="https://proofstudio.example",
+        data_dir=tmp_path,
+        demo_mode=False,
+        b2_key_id="key-id",
+        b2_app_key="app-key",
+        b2_bucket="bucket",
+        b2_region="us-west-004",
+        gmi_api_key="gmi-key",
+        gmi_model="image-model",
+    )
+    app = create_app(settings)
+    demo_run = DemoPipeline(app.state.repository).run(
+        CampaignBrief(
+            name="Private storage",
+            audience="Hackathon judges",
+            message="Serve durable media without making the bucket public.",
+            tone="Editorial",
+        ),
+        "private-proxy-test",
+    )
+    storage_key = "proofstudio/assets/aa/example.png"
+    live_run = demo_run.model_copy(
+        update={
+            "demo_mode": False,
+            "assets": [
+                demo_run.assets[0].model_copy(
+                    update={"storage_key": storage_key, "mime_type": "image/png"}
+                )
+            ],
+            "manifest_storage_key": "proofstudio/manifests/example.json",
+        }
+    )
+    app.state.repository.save(live_run)
+    monkeypatch.setattr(app.state.pipeline, "sync_repository", lambda: None)
+    monkeypatch.setattr(
+        app.state.pipeline,
+        "fetch_object",
+        lambda key: (b"stored-image", "image/png"),
+    )
+    client = TestClient(app)
+
+    stored = client.get(f"/api/storage/{storage_key}")
+    unrecorded = client.get("/api/storage/proofstudio/app-runs/private.json")
+
+    assert settings.storage_public_url_base == "https://proofstudio.example/api/storage"
+    assert "B2_PUBLIC_URL_BASE" not in settings.live_configuration_errors()
+    assert stored.status_code == 200
+    assert stored.content == b"stored-image"
+    assert stored.headers["content-type"] == "image/png"
+    assert unrecorded.status_code == 404

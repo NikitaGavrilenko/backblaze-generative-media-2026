@@ -123,6 +123,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         return Response(manifest_path.read_text(encoding="utf-8"), media_type="application/json")
 
+    @application.get("/api/storage/{object_key:path}")
+    def get_live_object(object_key: str) -> Response:
+        """Serve only assets and manifests belonging to recorded live runs."""
+        if active_settings.demo_mode:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Object not found.")
+
+        with suppress(Exception):
+            live_pipeline.sync_repository()
+        allowed_keys = {
+            key
+            for run in repository.list()
+            for key in [
+                run.manifest_storage_key,
+                *(asset.storage_key for asset in run.assets),
+            ]
+            if key
+        }
+        if object_key not in allowed_keys:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Object not found.")
+
+        try:
+            body, media_type = live_pipeline.fetch_object(object_key)
+        except FileNotFoundError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Object not found.",
+            ) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Stored object is temporarily unavailable.",
+            ) from exc
+        return Response(
+            body,
+            media_type=media_type,
+            headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        )
+
     @application.post(
         "/api/runs/{run_id}/verify",
         response_model=VerificationResult,

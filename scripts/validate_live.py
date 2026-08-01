@@ -20,7 +20,7 @@ def main() -> None:
         region=settings.b2_region,
         key_id=settings.b2_key_id,
         app_key=settings.b2_app_key,
-        public_url_base=settings.b2_public_url_base,
+        public_url_base=settings.storage_public_url_base,
         auto_lifecycle=False,
         preflight=True,
     )
