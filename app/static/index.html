@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProofStudio — Traceable AI Media</title>
+  <meta name="description" content="Generate, trace, verify, and store campaign media.">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">P</span>
+      <span>ProofStudio</span>
+    </a>
+    <div class="mode"><span></span> Demo mode</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">PROVENANCE-AWARE CAMPAIGN WORKFLOWS</p>
+      <h1>Make every generated asset <em>accountable.</em></h1>
+      <p class="lede">Turn one campaign brief into traceable variants with durable provenance, integrity hashes, and reproducible run history.</p>
+    </section>
+
+    <section class="workspace">
+      <form id="brief-form" class="panel form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">01 / CAMPAIGN BRIEF</p>
+            <h2>Define the idea</h2>
+          </div>
+          <span class="tag">Structured input</span>
+        </div>
+
+        <label>
+          Campaign name
+          <input name="name" required minlength="2" maxlength="80" value="Lumen Launch">
+        </label>
+        <label>
+          Target audience
+          <input name="audience" required value="Independent creative teams">
+        </label>
+        <label>
+          Core message
+          <textarea name="message" required rows="3">Every creative decision stays visible, verifiable, and ready to reproduce.</textarea>
+        </label>
+        <div class="form-row">
+          <label>
+            Tone
+            <input name="tone" required value="Confident and editorial">
+          </label>
+          <label>
+            Aspect ratio
+            <select name="aspect_ratio">
+              <option value="1:1">1:1 Square</option>
+              <option value="4:5">4:5 Portrait</option>
+              <option value="16:9">16:9 Landscape</option>
+              <option value="9:16">9:16 Story</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Visual constraints
+          <input name="visual_constraints" value="No stock-photo look, clear typography">
+          <small>Separate constraints with commas.</small>
+        </label>
+
+        <button id="generate-button" type="submit">
+          <span>Generate traceable variants</span>
+          <span aria-hidden="true">→</span>
+        </button>
+        <p class="form-note">Demo mode creates local fixtures and a real Genblaze manifest. No paid AI call is made.</p>
+      </form>
+
+      <section class="panel results-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">02 / VERIFIED OUTPUT</p>
+            <h2>Run evidence</h2>
+          </div>
+          <button id="refresh-button" class="text-button" type="button">Refresh history</button>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          <div class="empty-orbit"><span></span></div>
+          <h3>No run selected</h3>
+          <p>Submit a brief to create two demo assets and a canonical Genblaze provenance manifest.</p>
+        </div>
+
+        <div id="run-view" class="run-view" hidden>
+          <div class="run-summary">
+            <div><span>Status</span><strong id="run-status"></strong></div>
+            <div><span>Provider</span><strong id="run-provider"></strong></div>
+            <div><span>Integrity</span><strong id="run-verified"></strong></div>
+          </div>
+          <div id="asset-grid" class="asset-grid"></div>
+          <div class="manifest-card">
+            <div>
+              <span>Canonical manifest hash</span>
+              <code id="manifest-hash"></code>
+            </div>
+            <div class="manifest-actions">
+              <button id="verify-button" class="secondary-button" type="button">Verify assets</button>
+              <a id="manifest-link" class="secondary-button" target="_blank" rel="noreferrer">Open manifest</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="error-state" class="error-state" hidden></div>
+      </section>
+    </section>
+
+    <section class="history-section">
+      <div class="section-heading">
+        <div>
+          <p class="step">03 / DURABLE HISTORY</p>
+          <h2>Previous runs</h2>
+        </div>
+        <p>Local repository today. Backblaze B2 is the next integration gate.</p>
+      </div>
+      <div id="history-grid" class="history-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Built with Genblaze</span>
+    <span>Backblaze B2 integration pending credentials</span>
+  </footer>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
+

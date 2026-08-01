@@ -1,0 +1,2 @@
+"""ProofStudio application package."""
+
