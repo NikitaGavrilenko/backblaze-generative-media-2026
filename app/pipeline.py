@@ -227,8 +227,6 @@ class LivePipeline:
             backend.close()
 
     def run(self, brief: CampaignBrief, idempotency_key: str | None) -> GenerationRun:
-        from genblaze_gmicloud import GMICloudImageProvider
-
         if idempotency_key:
             existing = self.repository.find_by_idempotency_key(idempotency_key)
             if existing:
@@ -237,6 +235,8 @@ class LivePipeline:
         missing = self.settings.live_configuration_errors()
         if missing:
             raise RuntimeError(f"Live mode is missing settings: {', '.join(missing)}")
+
+        from genblaze_gmicloud import GMICloudImageProvider
 
         created_at = datetime.now(UTC)
         prompt = DemoPipeline._build_prompt(brief)
